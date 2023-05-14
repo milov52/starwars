@@ -15,9 +15,9 @@ async def go_to_sleep(seconds):
         await asyncio.sleep(0)
 
 
-async def blink(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, offset_tics, symbol='*'):
     while True:
-        await go_to_sleep(random.randint(0, 3))
+        await go_to_sleep(offset_tics)
         canvas.addstr(row, column, symbol, curses.A_DIM)
         await go_to_sleep(2)
         canvas.addstr(row, column, symbol)
@@ -62,7 +62,6 @@ def draw_spaceship(canvas, max_x, max_y):
 
 
 def draw(canvas):
-
     curses.curs_set(False)
     max_y, max_x = curses.window.getmaxyx(canvas)
 
@@ -73,7 +72,8 @@ def draw(canvas):
     for _ in range(STAR_COUNTS):
         row, column = (random.randint(0, max_y - 1), random.randint(0, max_x - 1))
         symbol = random.choice('+*.:')
-        coroutines.append(blink(canvas, row, column, symbol))
+        offset_tics = random.randint(0, 3)
+        coroutines.append(blink(canvas, row, column, offset_tics, symbol))
 
     coroutines.append(coroutine_fire)
     coroutines.append(coroutine_spaceship)
