@@ -38,6 +38,7 @@ async def animate_spaceship(canvas, row, column, frame_size, animation_frames):
     frame_width, frame_height = frame_size
 
     for frame in animation_frames:
+
         rows_direction, columns_direction, space_pressed = read_controls(canvas)
         row += rows_direction
         column += columns_direction
@@ -54,6 +55,8 @@ async def animate_spaceship(canvas, row, column, frame_size, animation_frames):
         draw_frame(canvas, row, column, frame, negative=True)
 
 
+
+
 def draw_spaceship(canvas, canvas_width, canvas_height):
     with open(f"{ANIMATE_FRAME_PATH}/rocket_frame_1.txt", "r") as rocket1_frame, \
             open(f"{ANIMATE_FRAME_PATH}/rocket_frame_2.txt", "r") as rocket2_frame:
@@ -64,7 +67,7 @@ def draw_spaceship(canvas, canvas_width, canvas_height):
 
     row, column = canvas_height // 2, canvas_width // 2 - frame_width // 2
 
-    animation_frames = cycle([frame1, frame2])
+    animation_frames = cycle([frame1, frame1, frame2, frame2])
     return animate_spaceship(canvas, row, column, (frame_width, frame_height), animation_frames)
 
 
@@ -91,11 +94,10 @@ def draw(canvas):
         try:
             for coroutine in coroutines.copy():
                 coroutine.send(None)
-
-            canvas.refresh()
-            time.sleep(TIC_TIMEOUT)
         except StopIteration:
             coroutines.remove(coroutine)
+        canvas.refresh()
+        time.sleep(TIC_TIMEOUT)
 
 
 if __name__ == '__main__':
