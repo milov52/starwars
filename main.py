@@ -5,27 +5,13 @@ import time
 from itertools import cycle
 
 import settings
-from curses_tools import draw_frame, fire, get_frame_size, read_controls
+from obstacles import Obstacle, show_obstacles
+from curses_tools import draw_frame, fire, get_frame_size, go_to_sleep, read_controls
 from physics import update_speed
 from settings import BORDER_WIDTH, STAR_COUNTS, TIC_TIMEOUT
 
 event_loop = []
-
-
-async def fill_orbit_with_garbage(canvas, canvas_width):
-    while True:
-        garbage_frame = random.choice(settings.GARBAGE_FRAMES)
-
-        with open(f'{settings.ANIMATE_FRAME_PATH}/{garbage_frame}', "r") as garbage_file:
-            frame = garbage_file.read()
-
-        _, frame_width = get_frame_size(frame)
-        column = random.randint(0, canvas_width - frame_width)
-
-        garbage = fly_garbage(canvas, column=column, garbage_frame=frame)
-
-        event_loop.append(garbage)
-        await go_to_sleep(settings.GARBAGE_DELAY)
+obstacles = []
 
 
 async def run_spaceship(canvas, row, column, frame_size, animation_frames):
@@ -58,12 +44,6 @@ async def run_spaceship(canvas, row, column, frame_size, animation_frames):
         draw_frame(canvas, row, column, frame, negative=True)
 
 
-async def go_to_sleep(seconds):
-    iteration_count = int(seconds * 10)
-    for _ in range(iteration_count):
-        await asyncio.sleep(0)
-
-
 async def blink(canvas, row, column, offset_tics, symbol='*'):
     while True:
         await go_to_sleep(offset_tics)
@@ -91,48 +71,84 @@ def draw_spaceship(canvas, canvas_width, canvas_height):
     return run_spaceship(canvas, row, column, (frame_width, frame_height), animation_frames)
 
 
+async def fill_orbit_with_garbage(canvas, canvas_width):
+    garbage_id = 0
+    while True:
+        garbage_frame = 'duck.txt'  # random.choice(settings.GARBAGE_FRAMES)
+
+        with open(f'{settings.ANIMATE_FRAME_PATH}/{garbage_frame}', "r") as garbage_file:
+            frame = garbage_file.read()
+
+        frame_height, frame_width = get_frame_size(frame)
+        column = random.randint(0, canvas_width - frame_width)
+
+
+        garbage = fly_garbage(canvas, column=column, garbage_frame=frame)
+
+        event_loop.append(garbage)
+
+        await go_to_sleep(settings.GARBAGE_DELAY)
+
+
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
-
     column = max(column, 0)
     column = min(column, columns_number - 1)
 
+    frame_height, frame_width = get_frame_size(garbage_frame)
+    obstacle = Obstacle(0, column, frame_height, frame_width)
+    obstacles.append(obstacle)
+    obstacles_coroutine = show_obstacles(canvas, obstacles)
+    event_loop.append(obstacles_coroutine)
+
     row = settings.BORDER_WIDTH
 
-    while row < rows_number - settings.BORDER_WIDTH:
-        draw_frame(canvas, row, column, garbage_frame)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row, column, garbage_frame, negative=True)
-        row += speed
+    try:
+        while row < rows_number - settings.BORDER_WIDTH:
+            draw_frame(canvas, row, column, garbage_frame)
+            obstacle.row = row
+            obstacle.column = column
 
+            await asyncio.sleep(0)
+            draw_frame(canvas, row, column, garbage_frame, negative=True)
+            row += speed
+    finally:
+        obstacles.remove(obstacle)
 
-def draw(canvas):
-    curses.curs_set(False)
-    canvas_height, canvas_width = curses.window.getmaxyx(canvas)
-
-    coroutine_garbage = fill_orbit_with_garbage(canvas, canvas_width)
-
-    coroutine_spaceship = draw_spaceship(canvas, canvas_width - 1, canvas_height - 1)
-
+def get_stars_coroutine(canvas):
+    canvas_height, canvas_width = canvas.getmaxyx()
+    stars_coroutine = []
     for _ in range(STAR_COUNTS):
         row, column = (random.randint(0, canvas_height - BORDER_WIDTH),
                        random.randint(0, canvas_width - BORDER_WIDTH))
 
         symbol = random.choice('+*.:')
         offset_tics = random.randint(0, 3)
-        event_loop.append(blink(canvas, row, column, offset_tics, symbol))
+        stars_coroutine.append(blink(canvas, row, column, offset_tics, symbol))
+    return stars_coroutine
+
+
+def draw(canvas):
+    curses.curs_set(False)
+    canvas.border()
+
+    canvas_height, canvas_width = canvas.getmaxyx()
+
+    coroutine_garbage = fill_orbit_with_garbage(canvas, canvas_width)
+    coroutine_spaceship = draw_spaceship(canvas, canvas_width - 1, canvas_height - 1)
 
     event_loop.append(coroutine_garbage)
     event_loop.append(coroutine_spaceship)
+    event_loop.extend(get_stars_coroutine(canvas))
 
-    canvas.border()
     while True:
         try:
             for coroutine in event_loop.copy():
                 coroutine.send(None)
         except StopIteration:
             event_loop.remove(coroutine)
+        canvas.addstr(3, 10, f'{len(obstacles)}', curses.A_BOLD)
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 

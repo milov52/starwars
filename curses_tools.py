@@ -7,6 +7,11 @@ RIGHT_KEY_CODE = 261
 UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
 
+async def go_to_sleep(seconds):
+    iteration_count = int(seconds * 10)
+    for _ in range(iteration_count):
+        await asyncio.sleep(0)
+
 async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
     """Display animation of gun shot, direction and speed can be specified."""
 
