@@ -6,7 +6,7 @@ from gameplay.core import event_loop, obstacles, obstacles_in_last_collisions
 from gameplay.messages import show_gameover
 from physics.curses_tools import draw_frame, get_frame_size, go_to_sleep, read_controls
 from physics.physics import update_speed
-from settings import BORDER_WIDTH, ANIMATE_FRAME_PATH
+from settings import ANIMATE_FRAME_PATH, BORDER_WIDTH
 
 
 async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
@@ -45,7 +45,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
 
 async def run_spaceship(canvas, row, column, frame_size, animation_frames):
-    canvas_height, canvas_width = curses.window.getmaxyx(canvas)
+    canvas_height, canvas_width = canvas.getmaxyx()
     frame_width, frame_height = frame_size
     row_speed = column_speed = 0
 
@@ -77,7 +77,9 @@ async def run_spaceship(canvas, row, column, frame_size, animation_frames):
         draw_frame(canvas, row, column, frame, negative=True)
 
 
-def draw_spaceship(canvas, canvas_width, canvas_height):
+def draw_spaceship(canvas):
+    canvas_height, canvas_width = canvas.getmaxyx()
+
     with open(f"{ANIMATE_FRAME_PATH}/rocket_frame_1.txt", "r") as rocket1_frame, \
             open(f"{ANIMATE_FRAME_PATH}/rocket_frame_2.txt", "r") as rocket2_frame:
         frame1 = rocket1_frame.read()

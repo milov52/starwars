@@ -1,12 +1,11 @@
 import asyncio
-import curses
-
 
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
 RIGHT_KEY_CODE = 261
 UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
+
 
 async def go_to_sleep(seconds):
     iteration_count = int(seconds * 10)
