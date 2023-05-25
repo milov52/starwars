@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from gameplay.core import event_loop, obstacles, obstacles_in_last_collisions, year
+from gameplay.core import coroutins, obstacles, obstacles_in_last_collisions, year
 from gameplay.game_scenario import get_garbage_delay_tics
 from physics.curses_tools import draw_frame, get_frame_size, go_to_sleep
 from physics.explosion import explode
@@ -22,7 +22,7 @@ async def fill_orbit_with_garbage(canvas):
         garbage = fly_garbage(canvas, column=column, garbage_frame=frame)
         garbage_delay = get_garbage_delay_tics(year[0])
         if garbage_delay:
-            event_loop.append(garbage)
+            coroutins.append(garbage)
             await go_to_sleep(garbage_delay)
         else:
             await asyncio.sleep(0)

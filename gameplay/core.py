@@ -1,4 +1,4 @@
 year = [1957]
-event_loop = []
+coroutins = []
 obstacles = []
 obstacles_in_last_collisions = []

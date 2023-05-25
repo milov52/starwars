@@ -2,7 +2,7 @@ import asyncio
 import curses
 from itertools import cycle
 
-from gameplay.core import event_loop, obstacles, obstacles_in_last_collisions
+from gameplay.core import coroutins, obstacles, obstacles_in_last_collisions, year
 from gameplay.messages import show_gameover
 from physics.curses_tools import draw_frame, get_frame_size, go_to_sleep, read_controls
 from physics.physics import update_speed
@@ -63,9 +63,9 @@ async def run_spaceship(canvas, row, column, frame_size, animation_frames):
             row = min(row, canvas_height - BORDER_WIDTH - frame_height)
             column = min(column, canvas_width - BORDER_WIDTH - frame_width)
 
-        if space_pressed:
+        if space_pressed and year[0]>=2020:
             coroutine_fire = fire(canvas, row, column + frame_width // 2)
-            event_loop.append(coroutine_fire)
+            coroutins.append(coroutine_fire)
 
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
